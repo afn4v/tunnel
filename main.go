@@ -2,16 +2,29 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
 	"os/signal"
 	"sync"
 	"syscall"
+	"time"
 )
 
 func main() {
+
+	if r := recover(); r != nil {
+		f, err := os.Create(fmt.Sprint("log-", time.Now().UnixNano(), ".txt"))
+		if err == nil {
+			defer f.Close()
+			f.WriteString(err.Error())
+		}
+
+		main()
+	}
 
 	ctx, stop := signal.NotifyContext(
 		context.Background(),
@@ -47,7 +60,7 @@ func main() {
 	go func() {
 		if err := http.ListenAndServe(":3883", nil); err != nil {
 			if err != http.ErrServerClosed {
-				log.Fatal(err)
+				panic(err)
 			}
 		}
 	}()
